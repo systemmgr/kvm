@@ -133,11 +133,13 @@ fi
 # run post install scripts
 run_postinst() {
   systemmgr_run_post
-  systemctl enable libvirtd virtnetworkd
   [[ -f "/etc/libvirt/.installed" ]] || cp -Rf "$APPDIR/." "/etc/libvirt/"
   if [[ "${RUN_USER:-$USER}" != "root" ]]; then
     grep -s 'libvirt' /etc/group | grep -q "${RUN_USER:-$USER}" || usermod -a -G libvirt "${RUN_USER:-$USER}"
   fi
+  systemctl enable libvirtd virtnetworkd 2>/dev/null
+  systemctl status libvirtd.socket 2>&1 | grep 'Active:' | awk -F': ' '{print $2}' | grep -q active &&
+    systemctl restart libvirtd virtnetworkd
 }
 #
 execute "run_postinst" "Running post install scripts"
