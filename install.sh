@@ -134,6 +134,7 @@ fi
 run_postinst() {
   systemmgr_run_post
   systemctl enable libvirtd virtnetworkd
+  [[ -f "/etc/libvirt/.installed" ]] || cp -Rf "$APPDIR/." "/etc/libvirt/"
   if [[ "${RUN_USER:-$USER}" != "root" ]]; then
     grep -s 'libvirt' /etc/group | grep -q "${RUN_USER:-$USER}" || usermod -a -G libvirt "${RUN_USER:-$USER}"
   fi
