@@ -78,7 +78,13 @@ sudoreq # sudo required
 systemmgr_run_init
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # end with a space
-APP="libvirt qemu virt-viewer virt-manager "
+if cmd_exists pacman; then
+  APP="qemu libvirt dnsmasq virt-manager bridge-utils flex bison iptables-nft edk2-ovmf "
+elif cmd_exists apt; then
+  APP="qemu qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager libguestfs-tools "
+elif cmd_exists yum; then
+  APP="libvirt qemu-kvm virt-manager bridge-utils dnsmasq "
+fi
 PERL=""
 PYTH=""
 PIPS=""
@@ -133,13 +139,17 @@ fi
 # run post install scripts
 run_postinst() {
   systemmgr_run_post
+  service_enabled="$(systemctl status libvirtd.socket 2>&1 | grep 'Active:' | awk -F': ' '{print $2}' | grep -q -w 'inactive' && echo '' || echo true)"
   [[ -f "/etc/libvirt/.installed" ]] || cp -Rf "$APPDIR/." "/etc/libvirt/"
   if [[ "${RUN_USER:-$USER}" != "root" ]]; then
     grep -s 'libvirt' /etc/group | grep -q "${RUN_USER:-$USER}" || usermod -a -G libvirt "${RUN_USER:-$USER}"
   fi
-  systemctl enable libvirtd virtnetworkd 2>/dev/null
-  systemctl status libvirtd.socket 2>&1 | grep 'Active:' | awk -F': ' '{print $2}' | grep -q active &&
-    systemctl restart libvirtd virtnetworkd
+  if [ -z "$service_enabled" ]; then
+    systemctl enable libvirtd.socket libvirtd.service virtnetworkd.service --now &>/dev/null
+  else
+    systemctl restart libvirtd.socket libvirtd.service virtnetworkd.service &>/dev/null
+  fi
+
 }
 #
 execute "run_postinst" "Running post install scripts"
