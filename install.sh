@@ -82,8 +82,10 @@ if cmd_exists pacman; then
   APP="qemu libvirt dnsmasq virt-manager bridge-utils flex bison iptables-nft edk2-ovmf "
 elif cmd_exists apt; then
   APP="qemu qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager libguestfs-tools "
+elif cmd_exists dnf; then
+  APP="qemu-kvm qemu-img libvirt virt-install libvirt-client bridge-utils dnsmasq "
 elif cmd_exists yum; then
-  APP="libvirt qemu-kvm virt-manager bridge-utils dnsmasq "
+  APP="qemu-kvm libvirt libvirt-python libguestfs-tools virt-install bridge-utils dnsmasq "
 fi
 PERL=""
 PYTH=""
